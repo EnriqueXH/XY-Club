@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>星云活动社 · 迎新排行榜</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #a855f7;
+            --primary-light: #c084fc;
+            --accent: #d946ef;
+            --gold: #fbbf24;
+            --silver: #e2e8f0;
+            --bronze: #fb923c;
+            --bg: #07070c;
+            --bg-card: rgba(16, 16, 30, 0.75);
+            --text: #f8fafc;
+            --text-secondary: #64748b;
+            --text-dim: #475569;
+            --border: rgba(168, 85, 247, 0.15);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            font-family: 'Noto Sans SC', -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+        .bg-orb {
+            position: fixed; border-radius: 50%; filter: blur(100px);
+            opacity: 0.12; pointer-events: none; z-index: 0;
+        }
+        .orb-1 { width: 350px; height: 350px; background: var(--primary); top: -120px; right: -100px; animation: float 10s ease-in-out infinite; }
+        .orb-2 { width: 280px; height: 280px; background: var(--accent); bottom: 5%; left: -80px; animation: float 12s ease-in-out infinite reverse; }
+        .orb-3 { width: 220px; height: 220px; background: var(--primary); top: 45%; right: -50px; animation: float 14s ease-in-out infinite; }
+        @keyframes float {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-40px) scale(1.08); }
+        }
+        .particles { position: fixed; inset: 0; pointer-events: none; z-index: 1; overflow: hidden; }
+        .particle {
+            position: absolute; width: 2px; height: 2px;
+            background: var(--primary-light); border-radius: 50%; opacity: 0;
+            animation: particle-rise 18s infinite linear;
+        }
+        @keyframes particle-rise {
+            0% { transform: translateY(110vh) translateX(0); opacity: 0; }
+            8% { opacity: 0.4; }
+            92% { opacity: 0.4; }
+            100% { transform: translateY(-10vh) translateX(30px); opacity: 0; }
+        }
+        .header {
+            position: relative; z-index: 10; padding: 14px 18px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .logo-btn {
+            width: 46px; height: 46px; border-radius: 50%; overflow: hidden;
+            border: 2px solid rgba(168, 85, 247, 0.35);
+            box-shadow: 0 0 18px rgba(168, 85, 247, 0.25), inset 0 0 12px rgba(168, 85, 247, 0.08);
+            cursor: pointer; transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative; background: rgba(0,0,0,0.4); flex-shrink: 0;
+        }
+        .logo-btn:hover, .logo-btn:active {
+            transform: scale(1.08);
+            box-shadow: 0 0 28px rgba(168, 85, 247, 0.45), inset 0 0 18px rgba(168, 85, 247, 0.15);
+            border-color: rgba(168, 85, 247, 0.7);
+        }
+        .logo-btn img { width: 100%; height: 100%; object-fit: cover; }
+        .logo-btn::after {
+            content: ''; position: absolute; inset: 0; border-radius: 50%;
+            background: linear-gradient(135deg, rgba(168,85,247,0.15), transparent);
+            pointer-events: none;
+        }
+        .header-title { text-align: center; flex: 1; padding: 0 10px; }
+        .header-title .main-title {
+            font-size: 26px; font-weight: 900; letter-spacing: 6px;
+            background: linear-gradient(135deg, #ffffff 0%, #e9d5ff 30%, #c084fc 60%, #a855f7 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            filter: drop-shadow(0 0 12px rgba(168,85,247,0.35)) drop-shadow(0 0 30px rgba(168,85,247,0.15));
+            line-height: 1.2; position: relative;
+        }
+        .header-title .main-title::after {
+            content: '星云活动社'; position: absolute; left: 0; top: 0; width: 100%;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(192,132,252,0.6));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            filter: blur(8px); opacity: 0.6; z-index: -1;
+        }
+        .header-title .sub-title {
+            font-size: 11px; color: var(--text-secondary); margin-top: 4px;
+            letter-spacing: 8px; font-weight: 300; text-transform: uppercase;
+        }
+        .header-spacer { width: 46px; flex-shrink: 0; }
+
+        .time-section {
+            position: relative; z-index: 5; padding: 0 20px;
+            max-width: 480px; margin: 0 auto 20px;
+        }
+        .time-card {
+            background: linear-gradient(135deg, rgba(16,16,30,0.8), rgba(10,10,20,0.9));
+            border: 1px solid var(--border); border-radius: 20px; padding: 18px 20px;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.03);
+            position: relative; overflow: hidden;
+        }
+        .time-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(168,85,247,0.4), transparent);
+        }
+        .time-urgency {
+            font-size: 10px; color: var(--accent); letter-spacing: 3px;
+            text-transform: uppercase; margin-bottom: 10px; font-weight: 500;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .time-urgency .pulse {
+            width: 6px; height: 6px; background: var(--accent); border-radius: 50%;
+            box-shadow: 0 0 8px var(--accent); animation: pulse-dot 1.5s ease-in-out infinite;
+        }
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.7); }
+        }
+        .deadline-info {
+            font-size: 11px; color: var(--text-secondary);
+            margin-bottom: 14px; letter-spacing: 1px;
+            font-family: 'Orbitron', monospace;
+        }
+        .deadline-info span { color: var(--primary-light); font-weight: 600; }
+
+        .flip-clock {
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+        }
+        .flip-unit {
+            position: relative; width: 38px; height: 52px; perspective: 200px;
+        }
+        .flip-unit.wide { width: 46px; }
+        .flip-static {
+            position: absolute; inset: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'Orbitron', monospace; font-size: 28px; font-weight: 700; color: #fff;
+            background: linear-gradient(180deg, #1a1a35, #0f0f20);
+            border-radius: 6px; border: 1px solid rgba(168, 85, 247, 0.25);
+            box-shadow: 0 0 15px rgba(168, 85, 247, 0.1), inset 0 1px 0 rgba(255,255,255,0.05);
+            text-shadow: 0 0 10px rgba(168,85,247,0.5), 0 0 20px rgba(168,85,247,0.3);
+            z-index: 1;
+        }
+        .flip-static::before {
+            content: ''; position: absolute; left: 2px; right: 2px; top: 50%; height: 1px;
+            background: rgba(0,0,0,0.5); z-index: 2;
+        }
+        .flip-card {
+            position: absolute; inset: 0; transform-style: preserve-3d;
+            z-index: 3; display: none;
+        }
+        .flip-half {
+            position: absolute; left: 0; width: 100%; height: 50%; overflow: hidden;
+            backface-visibility: hidden;
+            font-family: 'Orbitron', monospace; font-size: 28px; font-weight: 700; color: #fff;
+            background: linear-gradient(180deg, #1a1a35, #0f0f20);
+            border: 1px solid rgba(168, 85, 247, 0.3);
+            text-shadow: 0 0 10px rgba(168,85,247,0.5);
+        }
+        .flip-half.top { top: 0; border-radius: 6px 6px 0 0; border-bottom: none; transform-origin: bottom; }
+        .flip-half.bottom { bottom: 0; border-radius: 0 0 6px 6px; border-top: none; transform-origin: top; }
+        .flip-half .val { position: absolute; left: 0; width: 100%; text-align: center; line-height: 52px; }
+        .flip-half.top .val { bottom: 0; }
+        .flip-half.bottom .val { top: 0; }
+        .flip-half.new { z-index: 4; }
+        .flip-half.old { z-index: 5; }
+        .flip-half.old.top { animation: flip-top 0.45s ease-in forwards; }
+        .flip-half.new.bottom { animation: flip-bottom 0.45s ease-out 0.22s forwards; transform: rotateX(90deg); }
+        @keyframes flip-top {
+            0% { transform: rotateX(0); }
+            100% { transform: rotateX(-90deg); }
+        }
+        @keyframes flip-bottom {
+            0% { transform: rotateX(90deg); }
+            100% { transform: rotateX(0); }
+        }
+        .clock-sep {
+            font-family: 'Orbitron', monospace; font-size: 22px; font-weight: 700;
+            color: var(--primary-light); text-shadow: 0 0 10px rgba(168,85,247,0.4);
+            animation: blink 1s ease-in-out infinite; padding-bottom: 4px;
+        }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        .time-label {
+            display: flex; justify-content: center; gap: 6px; margin-top: 8px;
+        }
+        .time-label span {
+            width: 38px; text-align: center; font-size: 9px;
+            color: var(--text-dim); letter-spacing: 1px; font-family: 'Orbitron', monospace;
+        }
+        .time-label span.wide { width: 46px; }
+
+        .main { position: relative; z-index: 5; padding: 0 16px 50px; max-width: 480px; margin: 0 auto; }
+        .top3-section { margin-bottom: 24px; }
+        .top3-container {
+            display: flex; align-items: flex-end; justify-content: center;
+            gap: 14px; padding: 16px 0 8px; position: relative;
+        }
+        .top3-item { display: flex; flex-direction: column; align-items: center; position: relative; transition: transform 0.3s ease; }
+        .top3-item.rank-1 { order: 2; transform: translateY(-16px); }
+        .top3-item.rank-2 { order: 1; }
+        .top3-item.rank-3 { order: 3; }
+        .crown {
+            font-size: 32px; margin-bottom: 10px;
+            filter: drop-shadow(0 0 12px rgba(251,191,36,0.6));
+            animation: crown-float 2s ease-in-out infinite;
+        }
+        .rank-2 .crown { filter: drop-shadow(0 0 12px rgba(226,232,240,0.5)); animation-delay: 0.3s; }
+        .rank-3 .crown { filter: drop-shadow(0 0 12px rgba(251,146,60,0.5)); animation-delay: 0.6s; }
+        @keyframes crown-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+
+        .top3-name {
+            margin-top: 8px; font-size: 16px; font-weight: 700; color: var(--text);
+            text-align: center; max-width: 100px; overflow: hidden; text-overflow: ellipsis;
+            white-space: nowrap; letter-spacing: 1px;
+        }
+        .rank-1 .top3-name { font-size: 18px; }
+        .top3-school {
+            font-size: 11px; color: var(--text-secondary); margin-top: 4px;
+            max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+            font-weight: 400; letter-spacing: 0.5px;
+        }
+        .top3-count {
+            margin-top: 10px; font-family: 'Orbitron', monospace; font-size: 20px; font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-light), var(--accent));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            display: flex; align-items: center; gap: 3px;
+        }
+        .rank-1 .top3-count { font-size: 24px; }
+        .top3-count .unit {
+            font-size: 11px; font-weight: 400; color: var(--text-secondary);
+            -webkit-text-fill-color: var(--text-secondary); font-family: 'Noto Sans SC', sans-serif;
+        }
+        .rank-badge {
+            position: absolute; top: -6px; right: -6px; width: 24px; height: 24px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 12px; font-weight: 800; color: #000; font-family: 'Orbitron', monospace;
+        }
+        .rank-1 .rank-badge { background: var(--gold); box-shadow: 0 0 12px rgba(251,191,36,0.5); }
+        .rank-2 .rank-badge { background: var(--silver); box-shadow: 0 0 12px rgba(226,232,240,0.3); }
+        .rank-3 .rank-badge { background: var(--bronze); box-shadow: 0 0 12px rgba(251,146,60,0.3); }
+
+        .list-section {
+            background: var(--bg-card); border-radius: 20px; border: 1px solid var(--border);
+            backdrop-filter: blur(20px); overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3), 0 0 60px rgba(168,85,247,0.04);
+        }
+        .list-header {
+            display: grid; grid-template-columns: 44px 1fr 72px;
+            padding: 14px 18px; border-bottom: 1px solid rgba(168,85,247,0.08);
+        }
+        .list-header span {
+            font-size: 10px; color: var(--text-dim); font-weight: 500;
+            letter-spacing: 2px; text-transform: uppercase; font-family: 'Orbitron', monospace;
+        }
+        .list-header span:nth-child(2) { text-align: left; padding-left: 8px; }
+        .list-header span:nth-child(3) { text-align: right; }
+        .list-item {
+            display: grid; grid-template-columns: 44px 1fr 72px;
+            align-items: center; padding: 14px 18px;
+            border-bottom: 1px solid rgba(168,85,247,0.04);
+            transition: all 0.25s ease; position: relative;
+        }
+        .list-item:last-child { border-bottom: none; }
+        .list-item::before {
+            content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+            width: 2px; height: 0;
+            background: linear-gradient(180deg, var(--primary), var(--accent));
+            border-radius: 0 2px 2px 0; transition: height 0.35s ease;
+        }
+        .list-item:hover::before, .list-item:active::before { height: 50%; }
+        .list-item:hover, .list-item:active { background: rgba(168,85,247,0.04); }
+        .list-rank {
+            font-family: 'Orbitron', monospace; font-size: 14px; font-weight: 600;
+            color: var(--text-dim); text-align: center;
+        }
+        .list-info { padding-left: 8px; min-width: 0; }
+        .list-name {
+            font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 3px;
+            letter-spacing: 0.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .list-school {
+            font-size: 11px; color: var(--text-secondary); font-weight: 400;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .list-count {
+            text-align: right; font-family: 'Orbitron', monospace; font-size: 17px; font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-light), var(--accent));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+        .list-count .unit {
+            font-size: 10px; font-weight: 400; color: var(--text-dim);
+            -webkit-text-fill-color: var(--text-dim); margin-left: 2px;
+            font-family: 'Noto Sans SC', sans-serif;
+        }
+        .empty-state { text-align: center; padding: 50px 20px; color: var(--text-dim); }
+        .empty-state .icon { font-size: 40px; margin-bottom: 10px; opacity: 0.4; }
+        .empty-state p { font-size: 13px; letter-spacing: 1px; }
+
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(12px); z-index: 1000;
+            display: flex; align-items: center; justify-content: center;
+            padding: 20px; opacity: 0; visibility: hidden; transition: all 0.35s ease;
+        }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal {
+            background: linear-gradient(145deg, #13131f, #0c0c18); border: 1px solid var(--border);
+            border-radius: 24px; width: 100%; max-width: 420px; padding: 28px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 50px rgba(168,85,247,0.08);
+            transform: scale(0.92) translateY(20px);
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            max-height: 90vh; overflow-y: auto;
+        }
+        .modal-overlay.active .modal { transform: scale(1) translateY(0); }
+        .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; }
+        .modal-title {
+            font-size: 18px; font-weight: 700;
+            background: linear-gradient(135deg, #fff, var(--primary-light));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            letter-spacing: 1px;
+        }
+        .modal-close {
+            width: 34px; height: 34px; border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03);
+            color: var(--text-dim); display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-size: 20px; transition: all 0.2s;
+        }
+        .modal-close:hover { background: rgba(255,255,255,0.08); color: var(--text); }
+        .form-group { margin-bottom: 18px; }
+        .form-label {
+            display: block; font-size: 11px; color: var(--text-secondary);
+            margin-bottom: 8px; letter-spacing: 1px; text-transform: uppercase; font-weight: 500;
+        }
+        .form-input {
+            width: 100%; padding: 13px 16px; background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(168,85,247,0.15); border-radius: 14px;
+            color: var(--text); font-size: 14px; font-family: inherit;
+            outline: none; transition: all 0.2s; letter-spacing: 0.5px;
+        }
+        .form-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(168,85,247,0.08), 0 0 15px rgba(168,85,247,0.1);
+        }
+        .form-input::placeholder { color: rgba(100,116,139,0.35); }
+        textarea.form-input { min-height: 140px; resize: vertical; line-height: 1.7; font-size: 13px; }
+
+        .preview-section {
+            margin-bottom: 18px;
+            border: 1px solid rgba(168,85,247,0.1);
+            border-radius: 14px;
+            overflow: hidden;
+            background: rgba(0,0,0,0.2);
+        }
+        .preview-header {
+            display: grid;
+            grid-template-columns: 40px 1fr 60px 60px;
+            padding: 10px 14px;
+            background: rgba(168,85,247,0.06);
+            border-bottom: 1px solid rgba(168,85,247,0.08);
+        }
+        .preview-header span {
+            font-size: 9px; color: var(--text-dim); font-weight: 500;
+            letter-spacing: 1px; text-transform: uppercase; font-family: 'Orbitron', monospace;
+        }
+        .preview-header span:nth-child(2) { text-align: left; padding-left: 4px; }
+        .preview-header span:nth-child(3), .preview-header span:nth-child(4) { text-align: right; }
+        .preview-row {
+            display: grid;
+            grid-template-columns: 40px 1fr 60px 60px;
+            padding: 10px 14px;
+            border-bottom: 1px solid rgba(168,85,247,0.04);
+            font-size: 13px;
+            align-items: center;
+        }
+        .preview-row:last-child { border-bottom: none; }
+        .preview-row .p-rank {
+            font-family: 'Orbitron', monospace; font-size: 12px; font-weight: 600;
+            color: var(--text-dim); text-align: center;
+        }
+        .preview-row .p-name {
+            color: var(--text); font-weight: 600;
+            padding-left: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .preview-row .p-school {
+            color: var(--text-secondary); font-size: 11px;
+            text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .preview-row .p-count {
+            font-family: 'Orbitron', monospace; font-size: 13px; font-weight: 700;
+            color: var(--primary-light); text-align: right;
+        }
+        .preview-empty {
+            text-align: center; padding: 20px; color: var(--text-dim); font-size: 12px;
+        }
+
+        .btn {
+            width: 100%; padding: 14px; border: none; border-radius: 14px;
+            font-size: 14px; font-weight: 600; font-family: inherit;
+            cursor: pointer; transition: all 0.25s; letter-spacing: 1px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), #7e22ce); color: white;
+            box-shadow: 0 4px 20px rgba(168,85,247,0.25);
+        }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 25px rgba(168,85,247,0.35); }
+        .btn-primary:active { transform: translateY(0); }
+        .btn-secondary {
+            background: rgba(255,255,255,0.03); color: var(--text-secondary);
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+        .btn-secondary:hover { background: rgba(255,255,255,0.06); }
+        .btn-danger {
+            background: rgba(239,68,68,0.08); color: #ef4444;
+            border: 1px solid rgba(239,68,68,0.15);
+            font-size: 12px; padding: 10px; width: auto; min-width: 100px;
+            display: inline-block;
+        }
+        .btn-danger:hover { background: rgba(239,68,68,0.12); }
+
+        .btn-row {
+            display: flex; gap: 10px; align-items: center; margin-top: 16px;
+        }
+        .btn-row .btn-primary { flex: 1; }
+
+        .hint {
+            font-size: 10px; color: rgba(100,116,139,0.45); margin-top: 8px;
+            line-height: 1.6; letter-spacing: 0.3px;
+        }
+        .error-msg { color: #ef4444; font-size: 12px; margin-top: 6px; display: none; letter-spacing: 0.5px; }
+        .error-msg.show { display: block; }
+        .toast {
+            position: fixed; top: 20px; left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: linear-gradient(135deg, var(--primary), #7e22ce); color: white;
+            padding: 12px 28px; border-radius: 14px; font-size: 13px; font-weight: 500;
+            box-shadow: 0 8px 30px rgba(168,85,247,0.35); z-index: 2000; opacity: 0;
+            transition: all 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+            pointer-events: none; letter-spacing: 1px;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(24px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-in { animation: slideUp 0.55s ease forwards; opacity: 0; }
+        .delay-1 { animation-delay: 0.1s; }
+        .delay-2 { animation-delay: 0.2s; }
+        .delay-3 { animation-delay: 0.35s; }
+        @media (max-width: 360px) {
+            .header-title .main-title { font-size: 22px; letter-spacing: 4px; }
+            .flip-unit { width: 34px; height: 46px; }
+            .flip-unit.wide { width: 42px; }
+            .flip-static { font-size: 24px; }
+            .flip-half { font-size: 24px; }
+            .flip-half .val { line-height: 46px; }
+            .clock-sep { font-size: 18px; }
+        }
+    </style>
+<base target="_blank">
+</head>
+<body>
+    <div class="bg-orb orb-1"></div>
+    <div class="bg-orb orb-2"></div>
+    <div class="bg-orb orb-3"></div>
+    <div class="particles" id="particles"></div>
+
+    <header class="header">
+        <div class="logo-btn" onclick="openAdmin()" title="管理入口">
+            <img src="data:image/jpeg;base64,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" alt="星云CLUB">
+        </div>
+        <div class="header-title">
+            <h1 class="main-title">星云活动社</h1>
+            <p class="sub-title">迎新排行榜</p>
+        </div>
+        <div class="header-spacer"></div>
+    </header>
+
+    <section class="time-section animate-in delay-1">
+        <div class="time-card">
+            <div class="time-urgency">
+                <span class="pulse"></span>
+                活动倒计时
+            </div>
+            <div class="deadline-info">
+                截止日期：<span>2026.10.15</span> <span>22:00</span>
+            </div>
+            <div class="flip-clock" id="flipClock"></div>
+            <div class="time-label">
+                <span class="wide">DAY</span><span>HR</span><span>MIN</span><span></span><span>SEC</span>
+            </div>
+        </div>
+    </section>
+
+    <main class="main">
+        <section class="top3-section animate-in delay-2">
+            <div class="top3-container" id="top3Container"></div>
+        </section>
+
+        <section class="list-section animate-in delay-3">
+            <div class="list-header">
+                <span>RK</span>
+                <span>NAME / SCHOOL</span>
+                <span>INVITE</span>
+            </div>
+            <div id="listContainer"></div>
+        </section>
+    </main>
+
+    <div class="modal-overlay" id="adminModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">管理员验证</h3>
+                <button class="modal-close" onclick="closeAdmin()">&times;</button>
+            </div>
+
+            <div id="verifyStep">
+                <div class="form-group">
+                    <label class="form-label">验证口令</label>
+                    <input type="password" class="form-input" id="verifyInput" placeholder="请输入管理口令..." onkeypress="if(event.key==='Enter')verifyAdmin()">
+                    <p class="error-msg" id="verifyError">口令错误，请重试</p>
+                </div>
+                <button class="btn btn-primary" onclick="verifyAdmin()">验证进入</button>
+            </div>
+
+            <div id="dataStep" style="display:none;">
+                <div class="form-group">
+                    <label class="form-label">数据录入（支持Excel直接粘贴）</label>
+                    <textarea class="form-input" id="dataInput" placeholder="张壮 北京大学 25
+李明 清华大学 18
+...
+
+格式：姓名 + 空格/TAB + 学校 + 空格/TAB + 人数"></textarea>
+                    <p class="hint">提示：从Excel复制后直接在上方粘贴即可，支持 Tab 或空格分隔。姓名将自动匿名处理。</p>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">实时预览（已按邀请人数排序）</label>
+                    <div class="preview-section" id="previewSection">
+                        <div class="preview-empty">请在上方录入数据以预览排名</div>
+                    </div>
+                </div>
+
+                <div class="btn-row">
+                    <button class="btn btn-primary" onclick="updateData()">更新排行榜</button>
+                    <button class="btn btn-danger" onclick="clearData()">清空数据</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const defaultData = [
+            { name: "张壮", school: "北京大学", count: 42 },
+            { name: "李明", school: "清华大学", count: 38 },
+            { name: "王雪", school: "复旦大学", count: 35 },
+            { name: "陈宇", school: "浙江大学", count: 31 },
+            { name: "刘涵", school: "南京大学", count: 28 },
+            { name: "赵琪", school: "武汉大学", count: 25 },
+            { name: "孙伟", school: "中山大学", count: 22 },
+            { name: "周婷", school: "四川大学", count: 19 },
+            { name: "吴博", school: "华中科技大学", count: 16 },
+            { name: "郑悦", school: "西安交通大学", count: 14 }
+        ];
+
+        const ADMIN_CODE = "xyclub6677";
+        const DEADLINE = new Date('2026-10-15T22:00:00').getTime();
+
+        function anonymize(name) {
+            if (!name || name.length < 2) return name;
+            if (name.length === 2) {
+                return name[0] + '*';
+            } else if (name.length === 3) {
+                return name[0] + '*' + name[2];
+            } else if (name.length === 4) {
+                return name[0] + '**' + name[3];
+            } else {
+                return name[0] + '**' + name[name.length - 1];
+            }
+        }
+
+        const clockUnits = ['d1','d2','h1','h2','m1','m2','s1','s2'];
+        let prevTime = {};
+
+        function initClock() {
+            const container = document.getElementById('flipClock');
+            clockUnits.forEach((id, idx) => {
+                const unit = document.createElement('div');
+                unit.className = 'flip-unit' + (id.startsWith('d') ? ' wide' : '');
+                unit.id = 'unit-' + id;
+                unit.innerHTML = `
+                    <div class="flip-static" data-val="0">0</div>
+                    <div class="flip-card" id="card-${id}">
+                        <div class="flip-half top old"><div class="val">0</div></div>
+                        <div class="flip-half bottom old"><div class="val">0</div></div>
+                        <div class="flip-half top new"><div class="val">0</div></div>
+                        <div class="flip-half bottom new"><div class="val">0</div></div>
+                    </div>
+                `;
+                container.appendChild(unit);
+                if (idx === 1 || idx === 3 || idx === 5) {
+                    const sep = document.createElement('div');
+                    sep.className = 'clock-sep';
+                    sep.textContent = ':';
+                    sep.style.animationDelay = (idx * 0.1) + 's';
+                    container.appendChild(sep);
+                }
+                prevTime[id] = '0';
+            });
+        }
+
+        function updateClock() {
+            const now = Date.now();
+            let diff = DEADLINE - now;
+            if (diff < 0) diff = 0;
+
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+            const d = String(days).padStart(2, '0');
+            const h = String(hours).padStart(2, '0');
+            const m = String(minutes).padStart(2, '0');
+            const s = String(seconds).padStart(2, '0');
+
+            const values = {
+                d1: d[0], d2: d[1],
+                h1: h[0], h2: h[1],
+                m1: m[0], m2: m[1],
+                s1: s[0], s2: s[1]
+            };
+
+            for (let key in values) {
+                if (values[key] !== prevTime[key]) {
+                    flipDigit(key, values[key]);
+                    prevTime[key] = values[key];
+                }
+            }
+        }
+
+        function flipDigit(id, newVal) {
+            const unit = document.getElementById('unit-' + id);
+            const staticEl = unit.querySelector('.flip-static');
+            const card = document.getElementById('card-' + id);
+            const oldTop = card.querySelector('.flip-half.top.old');
+            const oldBottom = card.querySelector('.flip-half.bottom.old');
+            const newTop = card.querySelector('.flip-half.top.new');
+            const newBottom = card.querySelector('.flip-half.bottom.new');
+            const oldVal = staticEl.getAttribute('data-val');
+
+            oldTop.querySelector('.val').textContent = oldVal;
+            oldBottom.querySelector('.val').textContent = oldVal;
+            newTop.querySelector('.val').textContent = newVal;
+            newBottom.querySelector('.val').textContent = newVal;
+
+            card.style.display = 'block';
+            staticEl.style.opacity = '0';
+
+            oldTop.style.animation = 'none';
+            oldBottom.style.animation = 'none';
+            newTop.style.animation = 'none';
+            newBottom.style.animation = 'none';
+
+            void oldTop.offsetWidth;
+
+            oldTop.style.animation = 'flip-top 0.45s ease-in forwards';
+            newBottom.style.animation = 'flip-bottom 0.45s ease-out 0.22s forwards';
+
+            setTimeout(() => {
+                staticEl.textContent = newVal;
+                staticEl.setAttribute('data-val', newVal);
+                staticEl.style.opacity = '1';
+                card.style.display = 'none';
+            }, 500);
+        }
+
+        function createParticles() {
+            const container = document.getElementById('particles');
+            for (let i = 0; i < 18; i++) {
+                const p = document.createElement('div');
+                p.className = 'particle';
+                p.style.left = Math.random() * 100 + '%';
+                p.style.animationDelay = Math.random() * 18 + 's';
+                p.style.animationDuration = (12 + Math.random() * 10) + 's';
+                container.appendChild(p);
+            }
+        }
+
+        function render(data) {
+            data.sort((a, b) => b.count - a.count);
+
+            const top3Container = document.getElementById('top3Container');
+            const medals = ['🥇', '🥈', '🥉'];
+            const top3 = data.slice(0, 3);
+            const order = [1, 0, 2];
+
+            top3Container.innerHTML = order.map((idx, i) => {
+                const item = top3[idx];
+                if (!item) return '';
+                const rank = idx + 1;
+                return `
+                    <div class="top3-item rank-${rank}" style="animation: slideUp 0.6s ease ${0.15 * i}s both;">
+                        <div class="crown">${medals[idx]}</div>
+                        <div class="top3-name">${anonymize(item.name)}</div>
+                        <div class="top3-school">${item.school}</div>
+                        <div class="top3-count">${item.count}<span class="unit">人</span></div>
+                        <div class="rank-badge">${rank}</div>
+                    </div>
+                `;
+            }).join('');
+
+            const listContainer = document.getElementById('listContainer');
+            const rest = data.slice(3, 10);
+
+            if (rest.length === 0 && data.length <= 3) {
+                listContainer.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">📋</div>
+                        <p>暂无更多数据</p>
+                    </div>
+                `;
+                return;
+            }
+
+            listContainer.innerHTML = rest.map((item, idx) => `
+                <div class="list-item" style="animation: slideUp 0.45s ease ${0.08 * idx}s both;">
+                    <div class="list-rank">${idx + 4}</div>
+                    <div class="list-info">
+                        <div class="list-name">${anonymize(item.name)}</div>
+                        <div class="list-school">${item.school}</div>
+                    </div>
+                    <div class="list-count">${item.count}<span class="unit">人</span></div>
+                </div>
+            `).join('');
+        }
+
+        function parseData(raw) {
+            const lines = raw.split(/\n/);
+            const data = [];
+            for (const line of lines) {
+                const trimmed = line.trim();
+                if (!trimmed) continue;
+                const parts = trimmed.split(/[\t,，\s]+/);
+                if (parts.length >= 3) {
+                    const count = parseInt(parts[parts.length - 1]);
+                    if (!isNaN(count)) {
+                        const school = parts.slice(1, parts.length - 1).join(' ');
+                        data.push({ name: parts[0], school: school, count: count });
+                    }
+                }
+            }
+            return data;
+        }
+
+        function renderPreview() {
+            const raw = document.getElementById('dataInput').value.trim();
+            const container = document.getElementById('previewSection');
+
+            if (!raw) {
+                container.innerHTML = '<div class="preview-empty">请在上方录入数据以预览排名</div>';
+                return;
+            }
+
+            const data = parseData(raw);
+            if (data.length === 0) {
+                container.innerHTML = '<div class="preview-empty">未识别到有效数据，请检查格式</div>';
+                return;
+            }
+
+            data.sort((a, b) => b.count - a.count);
+
+            let html = `
+                <div class="preview-header">
+                    <span>RK</span>
+                    <span>NAME</span>
+                    <span>SCHOOL</span>
+                    <span>NUM</span>
+                </div>
+            `;
+
+            html += data.slice(0, 15).map((item, idx) => `
+                <div class="preview-row">
+                    <div class="p-rank">${idx + 1}</div>
+                    <div class="p-name">${anonymize(item.name)}</div>
+                    <div class="p-school">${item.school}</div>
+                    <div class="p-count">${item.count}</div>
+                </div>
+            `).join('');
+
+            if (data.length > 15) {
+                html += `<div class="preview-empty">... 还有 ${data.length - 15} 条数据未显示</div>`;
+            }
+
+            container.innerHTML = html;
+        }
+
+        function openAdmin() {
+            document.getElementById('adminModal').classList.add('active');
+            document.getElementById('verifyInput').value = '';
+            document.getElementById('verifyError').classList.remove('show');
+            showVerifyStep();
+            setTimeout(() => document.getElementById('verifyInput').focus(), 150);
+        }
+
+        function closeAdmin() {
+            document.getElementById('adminModal').classList.remove('active');
+        }
+
+        function showVerifyStep() {
+            document.getElementById('verifyStep').style.display = 'block';
+            document.getElementById('dataStep').style.display = 'none';
+            document.getElementById('modalTitle').textContent = '管理员验证';
+        }
+
+        function showDataStep() {
+            document.getElementById('verifyStep').style.display = 'none';
+            document.getElementById('dataStep').style.display = 'block';
+            document.getElementById('modalTitle').textContent = '数据管理';
+
+            const saved = localStorage.getItem('nebula_rank_data');
+            if (saved) {
+                const data = JSON.parse(saved);
+                document.getElementById('dataInput').value = data.map(d => `${d.name}\t${d.school}\t${d.count}`).join('\n');
+            } else {
+                document.getElementById('dataInput').value = '';
+            }
+            renderPreview();
+        }
+
+        function verifyAdmin() {
+            const input = document.getElementById('verifyInput').value.trim();
+            if (input === ADMIN_CODE) {
+                showDataStep();
+                showToast('验证成功 ✓');
+            } else {
+                document.getElementById('verifyError').classList.add('show');
+                document.getElementById('verifyInput').value = '';
+                document.getElementById('verifyInput').focus();
+            }
+        }
+
+        function updateData() {
+            const raw = document.getElementById('dataInput').value.trim();
+            if (!raw) {
+                showToast('请输入数据');
+                return;
+            }
+
+            if (!confirm('确认更新排行榜？此操作将覆盖现有数据。')) {
+                return;
+            }
+
+            const data = parseData(raw);
+
+            if (data.length === 0) {
+                showToast('未识别到有效数据，请检查格式');
+                return;
+            }
+
+            localStorage.setItem('nebula_rank_data', JSON.stringify(data));
+            render(data);
+            closeAdmin();
+            showToast(`已更新 ${data.length} 条数据 ✓`);
+        }
+
+        function clearData() {
+            if (!confirm('确定要清空所有数据吗？此操作不可恢复。')) {
+                return;
+            }
+            localStorage.removeItem('nebula_rank_data');
+            render(defaultData);
+            document.getElementById('dataInput').value = '';
+            renderPreview();
+            closeAdmin();
+            showToast('数据已重置');
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+
+        document.getElementById('adminModal').addEventListener('click', function(e) {
+            if (e.target === this) closeAdmin();
+        });
+
+        document.getElementById('dataInput').addEventListener('input', renderPreview);
+
+        function init() {
+            const saved = localStorage.getItem('nebula_rank_data');
+            const data = saved ? JSON.parse(saved) : defaultData;
+            render(data);
+            createParticles();
+            initClock();
+            updateClock();
+            setInterval(updateClock, 1000);
+        }
+
+        init();
+    </script>
+</body>
+</html>
