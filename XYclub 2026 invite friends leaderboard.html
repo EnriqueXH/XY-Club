@@ -556,356 +556,148 @@
     <div class="toast" id="toast"></div>
 
     <script>
-        const defaultData = [
-            { name: "张壮", school: "北京大学", count: 42 },
-            { name: "李明", school: "清华大学", count: 38 },
-            { name: "王雪", school: "复旦大学", count: 35 },
-            { name: "陈宇", school: "浙江大学", count: 31 },
-            { name: "刘涵", school: "南京大学", count: 28 },
-            { name: "赵琪", school: "武汉大学", count: 25 },
-            { name: "孙伟", school: "中山大学", count: 22 },
-            { name: "周婷", school: "四川大学", count: 19 },
-            { name: "吴博", school: "华中科技大学", count: 16 },
-            { name: "郑悦", school: "西安交通大学", count: 14 }
-        ];
+       // ==========👉【配置区，修改引号内内容，其余全部不动】==========
+const GITHUB_USERNAME = "enriqueXH";
+const GITHUB_REPO = "XY‑Club";
+const GITHUB_TOKEN = "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";
+const ADMIN_PASSWORD = "xyclub6677";
+// ==============================================================
 
-        const ADMIN_CODE = "xyclub6677";
-        const DEADLINE = new Date('2026-10-15T22:00:00').getTime();
+const API_BASE = `https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/contents/data.json`;
+let localData = [];
 
-        function anonymize(name) {
-            if (!name || name.length < 2) return name;
-            if (name.length === 2) {
-                return name[0] + '*';
-            } else if (name.length === 3) {
-                return name[0] + '*' + name[2];
-            } else if (name.length === 4) {
-                return name[0] + '**' + name[3];
-            } else {
-                return name[0] + '**' + name[name.length - 1];
-            }
+// 从GitHub读取data.json
+async function loadRemoteData(){
+    try{
+        const res = await fetch(API_BASE);
+        if(!res.ok) throw new Error("读取失败");
+        const json = await res.json();
+        const raw = atob(json.content);
+        localData = JSON.parse(raw);
+        renderList();
+        return true;
+    }catch(e){
+        console.error("读取云端失败，",e);
+        return false;
+    }
+}
+
+// 将榜单数据写入GitHub仓库data.json
+async function saveRemoteData(arr){
+    const getRes = await fetch(API_BASE);
+    const fileInfo = await getRes.json();
+    const sha = fileInfo.sha;
+    const contentB64 = btoa(JSON.stringify(arr,null,2));
+
+    const payload = {
+        message:"update rank data",
+        content:contentB64,
+        sha:sha
+    };
+    const resp = await fetch(API_BASE,{
+        method:"PUT",
+        headers:{
+            "Authorization":`token ${GITHUB_TOKEN}`,
+            "Content‑Type":"application/json"
+        },
+        body:JSON.stringify(payload)
+    });
+    if(!resp.ok){
+        throw new Error("提交失败，请检查token权限");
+    }
+    return true;
+}
+
+//弹出管理员密码弹窗（点击logo）
+document.getElementById("logo").addEventListener("click",()=>{
+    const mask = document.createElement("div");
+    mask.className = "mask";
+    mask.innerHTML = `
+    <div class="modal">
+        <h3>管理员验证</h3>
+        <input type="password" id="pwdInput" placeholder="输入管理员口令">
+        <div class="btns">
+            <button class="btn‑save" id="verifyBtn">验证</button>
+            <button class="btn‑close" id="closeBtn">关闭</button>
+        </div>
+    </div>
+    `;
+    document.body.appendChild(mask);
+    document.getElementById("closeBtn").onclick = ()=>mask.remove();
+    mask.onclick = e=>{if(e.target===mask) mask.remove();};
+
+    document.getElementById("verifyBtn").onclick = async ()=>{
+        const pwd = document.getElementById("pwdInput").value.trim();
+        if(pwd!==ADMIN_PASSWORD){
+            alert("口令错误");
+            return;
         }
+        mask.remove();
+        openEditPanel();
+    }
+})
 
-        const clockUnits = ['d1','d2','h1','h2','m1','m2','s1','s2'];
-        let prevTime = {};
+//编辑面板
+async function openEditPanel(){
+    const mask = document.createElement("div");
+    mask.className="mask";
+    mask.innerHTML=`
+    <div class="modal">
+        <h3>编辑排行榜数据(JSON)</h3>
+        <div class="status" id="editStatus"></div>
+        <textarea id="ta">${JSON.stringify(localData,null,2)}</textarea>
+        <div class="btns">
+            <button class="btn‑save" id="saveBtn">提交更新到云端</button>
+            <button class="btn‑close" id="closeEditBtn">关闭</button>
+        </div>
+    </div>
+    `;
+    document.body.appendChild(mask);
+    const statusDom = document.getElementById("editStatus");
+    document.getElementById("closeEditBtn").onclick = ()=>mask.remove();
+    mask.onclick = e=>{if(e.target===mask) mask.remove();};
 
-        function initClock() {
-            const container = document.getElementById('flipClock');
-            clockUnits.forEach((id, idx) => {
-                const unit = document.createElement('div');
-                unit.className = 'flip-unit' + (id.startsWith('d') ? ' wide' : '');
-                unit.id = 'unit-' + id;
-                unit.innerHTML = `
-                    <div class="flip-static" data-val="0">0</div>
-                    <div class="flip-card" id="card-${id}">
-                        <div class="flip-half top old"><div class="val">0</div></div>
-                        <div class="flip-half bottom old"><div class="val">0</div></div>
-                        <div class="flip-half top new"><div class="val">0</div></div>
-                        <div class="flip-half bottom new"><div class="val">0</div></div>
-                    </div>
-                `;
-                container.appendChild(unit);
-                if (idx === 1 || idx === 3 || idx === 5) {
-                    const sep = document.createElement('div');
-                    sep.className = 'clock-sep';
-                    sep.textContent = ':';
-                    sep.style.animationDelay = (idx * 0.1) + 's';
-                    container.appendChild(sep);
-                }
-                prevTime[id] = '0';
-            });
+    document.getElementById("saveBtn").onclick = async ()=>{
+        const txt = document.getElementById("ta").value.trim();
+        try{
+            const newArr = JSON.parse(txt);
+            statusDom.innerText="正在提交到GitHub仓库...";
+            await saveRemoteData(newArr);
+            statusDom.innerText="✅提交成功！等待GitHub Pages部署(1‑2分钟后其他设备刷新生效)";
+            localData = newArr;
+            renderList();
+        }catch(err){
+            statusDom.innerText="❌错误："+err.message;
         }
+    }
+}
 
-        function updateClock() {
-            const now = Date.now();
-            let diff = DEADLINE - now;
-            if (diff < 0) diff = 0;
+// 保留你原来的渲染函数名称 renderList，和页面兼容
+function renderList(){
+    const wrap = document.getElementById("listWrap");
+    wrap.innerHTML = "";
+    const sorted = [...localData].sort((a,b)=>Number(b.count)-Number(a.count));
+    sorted.forEach((item,idx)=>{
+        const div = document.createElement("div");
+        div.className = "rank‑card";
+        let numCls = "nother";
+        if(idx===0) numCls="n1";
+        if(idx===1) numCls="n2";
+        if(idx===2) numCls="n3";
+        div.innerHTML = `
+            <div class="num ${numCls}">${idx+1}</div>
+            <div class="info">
+                <div class="name">${item.name||""}</div>
+                <div class="count">邀请人数：${item.count||0}</div>
+            </div>
+        `;
+        wrap.appendChild(div);
+    })
+}
 
-            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-            const d = String(days).padStart(2, '0');
-            const h = String(hours).padStart(2, '0');
-            const m = String(minutes).padStart(2, '0');
-            const s = String(seconds).padStart(2, '0');
-
-            const values = {
-                d1: d[0], d2: d[1],
-                h1: h[0], h2: h[1],
-                m1: m[0], m2: m[1],
-                s1: s[0], s2: s[1]
-            };
-
-            for (let key in values) {
-                if (values[key] !== prevTime[key]) {
-                    flipDigit(key, values[key]);
-                    prevTime[key] = values[key];
-                }
-            }
-        }
-
-        function flipDigit(id, newVal) {
-            const unit = document.getElementById('unit-' + id);
-            const staticEl = unit.querySelector('.flip-static');
-            const card = document.getElementById('card-' + id);
-            const oldTop = card.querySelector('.flip-half.top.old');
-            const oldBottom = card.querySelector('.flip-half.bottom.old');
-            const newTop = card.querySelector('.flip-half.top.new');
-            const newBottom = card.querySelector('.flip-half.bottom.new');
-            const oldVal = staticEl.getAttribute('data-val');
-
-            oldTop.querySelector('.val').textContent = oldVal;
-            oldBottom.querySelector('.val').textContent = oldVal;
-            newTop.querySelector('.val').textContent = newVal;
-            newBottom.querySelector('.val').textContent = newVal;
-
-            card.style.display = 'block';
-            staticEl.style.opacity = '0';
-
-            oldTop.style.animation = 'none';
-            oldBottom.style.animation = 'none';
-            newTop.style.animation = 'none';
-            newBottom.style.animation = 'none';
-
-            void oldTop.offsetWidth;
-
-            oldTop.style.animation = 'flip-top 0.45s ease-in forwards';
-            newBottom.style.animation = 'flip-bottom 0.45s ease-out 0.22s forwards';
-
-            setTimeout(() => {
-                staticEl.textContent = newVal;
-                staticEl.setAttribute('data-val', newVal);
-                staticEl.style.opacity = '1';
-                card.style.display = 'none';
-            }, 500);
-        }
-
-        function createParticles() {
-            const container = document.getElementById('particles');
-            for (let i = 0; i < 18; i++) {
-                const p = document.createElement('div');
-                p.className = 'particle';
-                p.style.left = Math.random() * 100 + '%';
-                p.style.animationDelay = Math.random() * 18 + 's';
-                p.style.animationDuration = (12 + Math.random() * 10) + 's';
-                container.appendChild(p);
-            }
-        }
-
-        function render(data) {
-            data.sort((a, b) => b.count - a.count);
-
-            const top3Container = document.getElementById('top3Container');
-            const medals = ['🥇', '🥈', '🥉'];
-            const top3 = data.slice(0, 3);
-            const order = [1, 0, 2];
-
-            top3Container.innerHTML = order.map((idx, i) => {
-                const item = top3[idx];
-                if (!item) return '';
-                const rank = idx + 1;
-                return `
-                    <div class="top3-item rank-${rank}" style="animation: slideUp 0.6s ease ${0.15 * i}s both;">
-                        <div class="crown">${medals[idx]}</div>
-                        <div class="top3-name">${anonymize(item.name)}</div>
-                        <div class="top3-school">${item.school}</div>
-                        <div class="top3-count">${item.count}<span class="unit">人</span></div>
-                        <div class="rank-badge">${rank}</div>
-                    </div>
-                `;
-            }).join('');
-
-            const listContainer = document.getElementById('listContainer');
-            const rest = data.slice(3, 10);
-
-            if (rest.length === 0 && data.length <= 3) {
-                listContainer.innerHTML = `
-                    <div class="empty-state">
-                        <div class="icon">📋</div>
-                        <p>暂无更多数据</p>
-                    </div>
-                `;
-                return;
-            }
-
-            listContainer.innerHTML = rest.map((item, idx) => `
-                <div class="list-item" style="animation: slideUp 0.45s ease ${0.08 * idx}s both;">
-                    <div class="list-rank">${idx + 4}</div>
-                    <div class="list-info">
-                        <div class="list-name">${anonymize(item.name)}</div>
-                        <div class="list-school">${item.school}</div>
-                    </div>
-                    <div class="list-count">${item.count}<span class="unit">人</span></div>
-                </div>
-            `).join('');
-        }
-
-        function parseData(raw) {
-            const lines = raw.split(/\n/);
-            const data = [];
-            for (const line of lines) {
-                const trimmed = line.trim();
-                if (!trimmed) continue;
-                const parts = trimmed.split(/[\t,，\s]+/);
-                if (parts.length >= 3) {
-                    const count = parseInt(parts[parts.length - 1]);
-                    if (!isNaN(count)) {
-                        const school = parts.slice(1, parts.length - 1).join(' ');
-                        data.push({ name: parts[0], school: school, count: count });
-                    }
-                }
-            }
-            return data;
-        }
-
-        function renderPreview() {
-            const raw = document.getElementById('dataInput').value.trim();
-            const container = document.getElementById('previewSection');
-
-            if (!raw) {
-                container.innerHTML = '<div class="preview-empty">请在上方录入数据以预览排名</div>';
-                return;
-            }
-
-            const data = parseData(raw);
-            if (data.length === 0) {
-                container.innerHTML = '<div class="preview-empty">未识别到有效数据，请检查格式</div>';
-                return;
-            }
-
-            data.sort((a, b) => b.count - a.count);
-
-            let html = `
-                <div class="preview-header">
-                    <span>RK</span>
-                    <span>NAME</span>
-                    <span>SCHOOL</span>
-                    <span>NUM</span>
-                </div>
-            `;
-
-            html += data.slice(0, 15).map((item, idx) => `
-                <div class="preview-row">
-                    <div class="p-rank">${idx + 1}</div>
-                    <div class="p-name">${anonymize(item.name)}</div>
-                    <div class="p-school">${item.school}</div>
-                    <div class="p-count">${item.count}</div>
-                </div>
-            `).join('');
-
-            if (data.length > 15) {
-                html += `<div class="preview-empty">... 还有 ${data.length - 15} 条数据未显示</div>`;
-            }
-
-            container.innerHTML = html;
-        }
-
-        function openAdmin() {
-            document.getElementById('adminModal').classList.add('active');
-            document.getElementById('verifyInput').value = '';
-            document.getElementById('verifyError').classList.remove('show');
-            showVerifyStep();
-            setTimeout(() => document.getElementById('verifyInput').focus(), 150);
-        }
-
-        function closeAdmin() {
-            document.getElementById('adminModal').classList.remove('active');
-        }
-
-        function showVerifyStep() {
-            document.getElementById('verifyStep').style.display = 'block';
-            document.getElementById('dataStep').style.display = 'none';
-            document.getElementById('modalTitle').textContent = '管理员验证';
-        }
-
-        function showDataStep() {
-            document.getElementById('verifyStep').style.display = 'none';
-            document.getElementById('dataStep').style.display = 'block';
-            document.getElementById('modalTitle').textContent = '数据管理';
-
-            const saved = localStorage.getItem('nebula_rank_data');
-            if (saved) {
-                const data = JSON.parse(saved);
-                document.getElementById('dataInput').value = data.map(d => `${d.name}\t${d.school}\t${d.count}`).join('\n');
-            } else {
-                document.getElementById('dataInput').value = '';
-            }
-            renderPreview();
-        }
-
-        function verifyAdmin() {
-            const input = document.getElementById('verifyInput').value.trim();
-            if (input === ADMIN_CODE) {
-                showDataStep();
-                showToast('验证成功 ✓');
-            } else {
-                document.getElementById('verifyError').classList.add('show');
-                document.getElementById('verifyInput').value = '';
-                document.getElementById('verifyInput').focus();
-            }
-        }
-
-        function updateData() {
-            const raw = document.getElementById('dataInput').value.trim();
-            if (!raw) {
-                showToast('请输入数据');
-                return;
-            }
-
-            if (!confirm('确认更新排行榜？此操作将覆盖现有数据。')) {
-                return;
-            }
-
-            const data = parseData(raw);
-
-            if (data.length === 0) {
-                showToast('未识别到有效数据，请检查格式');
-                return;
-            }
-
-            localStorage.setItem('nebula_rank_data', JSON.stringify(data));
-            render(data);
-            closeAdmin();
-            showToast(`已更新 ${data.length} 条数据 ✓`);
-        }
-
-        function clearData() {
-            if (!confirm('确定要清空所有数据吗？此操作不可恢复。')) {
-                return;
-            }
-            localStorage.removeItem('nebula_rank_data');
-            render(defaultData);
-            document.getElementById('dataInput').value = '';
-            renderPreview();
-            closeAdmin();
-            showToast('数据已重置');
-        }
-
-        function showToast(msg) {
-            const toast = document.getElementById('toast');
-            toast.textContent = msg;
-            toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 2500);
-        }
-
-        document.getElementById('adminModal').addEventListener('click', function(e) {
-            if (e.target === this) closeAdmin();
-        });
-
-        document.getElementById('dataInput').addEventListener('input', renderPreview);
-
-        function init() {
-            const saved = localStorage.getItem('nebula_rank_data');
-            const data = saved ? JSON.parse(saved) : defaultData;
-            render(data);
-            createParticles();
-            initClock();
-            updateClock();
-            setInterval(updateClock, 1000);
-        }
-
-        init();
+window.onload = async ()=>{
+    await loadRemoteData();
+}
     </script>
 </body>
 </html>
