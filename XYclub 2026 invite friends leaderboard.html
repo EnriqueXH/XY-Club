@@ -197,7 +197,7 @@ textarea.fi{min-height:140px;resize:vertical;line-height:1.7;font-size:13px}
 const def=[{n:"张壮",s:"北京大学",c:42},{n:"李明",s:"清华大学",c:38},{n:"王雪",s:"复旦大学",c:35},{n:"陈宇",s:"浙江大学",c:31},{n:"刘涵",s:"南京大学",c:28},{n:"赵琪",s:"武汉大学",c:25},{n:"孙伟",s:"中山大学",c:22},{n:"周婷",s:"四川大学",c:19},{n:"吴博",s:"华中科技大学",c:16},{n:"郑悦",s:"西安交通大学",c:14}];
 // ==================== 云端同步配置 ====================
 const GITHUB_TOKEN = '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'; // 替换为你的 GitHub Personal Access Token
-const GIST_ID      = ''; // 首次运行留空，录入数据后自动创建 Gist；之后填入已创建的 Gist ID
+const GIST_ID      = localStorage.getItem('nebula_gist_id') || ''; // 首次留空，创建后自动保存
 const GIST_FILENAME = 'ranking-data.json';
 let isSyncing = false;
 let syncTimer = null;
@@ -300,23 +300,24 @@ else{toast("同步失败，请检查配置",true);}
 }
 function pushToGist(data){
 try{
-if(typeof fetch==="undefined"){console.warn("fetch not available");return;}
+if(typeof fetch==="undefined"){toast("当前环境不支持网络请求",true);return;}
 if(!GITHUB_TOKEN||GITHUB_TOKEN.indexOf('xxxx')>-1){toast("请先配置 GitHub Token",true);return;}
 isSyncing=true;setSyncStatus(false,"正在推送...");
 var payload={description:"星云活动社排行榜数据",public:false,files:{}};
 payload.files[GIST_FILENAME]={content:JSON.stringify(data,null,2)};
 var url=GIST_ID?'https://api.github.com/gists/'+GIST_ID:'https://api.github.com/gists';
-fetch(url,{method:'POST',headers:{'Authorization':'token '+GITHUB_TOKEN,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify(payload)})
+var method=GIST_ID?'PATCH':'POST';
+fetch(url,{method:method,headers:{'Authorization':'token '+GITHUB_TOKEN,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify(payload)})
 .then(function(r){return r.json();})
 .then(function(res){
 isSyncing=false;
 if(res.id){
-if(!GIST_ID){console.log('【重要】请记录你的 Gist ID: '+res.id);alert('首次创建成功！\n\n请记录你的 Gist ID：'+res.id+'\n\n请将此 ID 填入代码中的 GIST_ID 变量，否则其他设备无法同步。');}
+if(!GIST_ID){localStorage.setItem('nebula_gist_id',res.id);console.log('Gist ID 已自动保存: '+res.id);alert('首次创建成功！\n\nGist ID 已自动保存到本地存储。\n\n其他设备打开页面时将自动读取此 ID，无需手动配置。');}
 setSyncStatus(true,"已同步 · "+new Date().toLocaleTimeString());
-}else{setSyncStatus(false,"同步失败");console.error('Gist error:',res);}
+}else{setSyncStatus(false,"同步失败: "+(res.message||'未知错误'));console.error('Gist error:',res);toast("同步失败: "+(res.message||'请检查Token权限'),true);}
 })
-.catch(function(err){isSyncing=false;setSyncStatus(false,"网络错误");console.error('Fetch error:',err);});
-}catch(e){console.error('pushToGist error:',e);}
+.catch(function(err){isSyncing=false;setSyncStatus(false,"网络错误");console.error('Fetch error:',err);toast("网络错误，请确认:\n1. 手机联网正常\n2. 文件通过HTTPS/服务器访问，非本地文件\n3. Token权限包含gist",true);});
+}catch(e){console.error('pushToGist error:',e);toast("同步异常: "+e.message,true);}
 }
 function pullFromGist(callback){
 if(!GITHUB_TOKEN||GITHUB_TOKEN.indexOf('xxxx')>-1){setSyncStatus(false,"未配置 Token");if(callback)callback(null);return;}
@@ -340,9 +341,12 @@ if(document.visibilityState==='visible'&&!isSyncing){
 pullFromGist(function(data){
 if(data!==null){
 var sv=localStorage.getItem("nr"),local=sv?JSON.parse(sv):def;
-if(JSON.stringify(data)!==JSON.stringify(local)){
-localStorage.setItem("nr",JSON.stringify(data&&data.length?data:def));
-render(data&&data.length?data:def);
+var remoteStr=JSON.stringify(data),localStr=JSON.stringify(local);
+if(remoteStr!==localStr){
+var d=data&&data.length?data:def;
+localStorage.setItem("nr",JSON.stringify(d));
+currentData=d;
+render(d);
 toast("检测到新数据，已自动更新");
 }
 }
@@ -373,9 +377,12 @@ if(!document.hidden&&GIST_ID&&GITHUB_TOKEN&&GITHUB_TOKEN.indexOf('xxxx')===-1){
 pullFromGist(function(data){
 if(data!==null){
 var sv=localStorage.getItem("nr"),local=sv?JSON.parse(sv):def;
-if(JSON.stringify(data)!==JSON.stringify(local)){
-localStorage.setItem("nr",JSON.stringify(data&&data.length?data:def));
-render(data&&data.length?data:def);
+var remoteStr=JSON.stringify(data),localStr=JSON.stringify(local);
+if(remoteStr!==localStr){
+var d=data&&data.length?data:def;
+localStorage.setItem("nr",JSON.stringify(d));
+currentData=d;
+render(d);
 toast("已更新至最新数据");
 }
 }
