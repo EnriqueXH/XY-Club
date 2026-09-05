@@ -312,7 +312,7 @@ if(!GITHUB_TOKEN||GITHUB_TOKEN.indexOf('xxxx')>-1){toast("请先配置 GitHub To
 isSyncing=true;setSyncStatus(false,"正在推送...");
 var payload={description:"星云活动社排行榜数据",public:false,files:{}};
 payload.files[GIST_FILENAME]={content:JSON.stringify(data,null,2)};
-// 关键修复：每次从 localStorage 读取最新的 Gist ID
+// 每次从 localStorage 读取最新的 Gist ID
 var currentGistId = localStorage.getItem('nebula_gist_id') || '';
 var url=currentGistId?'https://api.github.com/gists/'+currentGistId:'https://api.github.com/gists';
 var method=currentGistId?'PATCH':'POST';
@@ -346,7 +346,7 @@ toast("同步异常: "+e.message,true);
 }
 function pullFromGist(callback){
 if(!GITHUB_TOKEN||GITHUB_TOKEN.indexOf('xxxx')>-1){setSyncStatus(false,"未配置 Token");if(callback)callback(null);return;}
-// 关键修复：从 localStorage 读取 Gist ID
+// 从 localStorage 读取 Gist ID
 var currentGistId = localStorage.getItem('nebula_gist_id') || '';
 if(!currentGistId){setSyncStatus(false,"未配置 Gist ID");if(callback)callback(null);return;}
 isSyncing=true;setSyncStatus(false,"正在同步...");
