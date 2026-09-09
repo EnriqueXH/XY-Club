@@ -285,9 +285,27 @@ document.getElementById("mo").addEventListener("click",function(e){if(e.target==
 document.getElementById("di").addEventListener("input",preview);
 function setSyncStatus(connected,text){
 var dot=document.getElementById("syncDot"),txt=document.getElementById("syncText"),btn=document.getElementById("refreshBtn");
+// 防御性检查：如果元素不存在，延迟100ms后重试
+if(!dot || !txt || !btn){
+  setTimeout(function(){
+    var dot2=document.getElementById("syncDot"),txt2=document.getElementById("syncText"),btn2=document.getElementById("refreshBtn");
+    if(dot2 && txt2 && btn2){
+      if(connected){
+        dot2.classList.remove("off");
+        btn2.disabled=false;
+        btn2.removeAttribute('disabled');
+      } else {
+        dot2.classList.add("off");
+        btn2.disabled=true;
+        btn2.setAttribute('disabled', 'disabled');
+      }
+      if(text) txt2.textContent=text;
+    }
+  }, 100);
+  return;
+}
 if(connected){
 dot.classList.remove("off");
-// ★ 关键修复：同时使用两种方式确保按钮可用
 btn.disabled=false;
 btn.removeAttribute('disabled');
 } else {
@@ -299,6 +317,11 @@ if(text)txt.textContent=text;
 }
 function manualSync(){
 if(isSyncing)return;
+var currentGistId = localStorage.getItem('nebula_gist_id') || '';
+if(!currentGistId){
+  toast("尚未创建 Gist，请先录入数据以自动创建", true);
+  return;
+}
 toast("正在同步...");
 pullFromGist(function(data){
 if(data!==null){localStorage.setItem("nr",JSON.stringify(data&&data.length?data:def));render(data&&data.length?data:def);toast("已同步最新数据 ✓");}
@@ -491,7 +514,12 @@ toast("已更新至最新数据");
   draw();
 })();
 
-init();
+// 等待 DOM 完全加载后再初始化，确保同步状态元素已存在
+if(document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', function(){ init(); });
+} else {
+  init();
+}
 </script>
 <div class="sync-bar" id="syncBar">
 <span class="sync-info" id="syncInfo"><span class="sync-dot off" id="syncDot"></span><span id="syncText">正在连接云端...</span></span>
