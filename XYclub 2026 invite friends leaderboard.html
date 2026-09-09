@@ -196,7 +196,7 @@ textarea.fi{min-height:140px;resize:vertical;line-height:1.7;font-size:13px}
 <script>
 const def=[{n:"张壮",s:"北京大学",c:42},{n:"李明",s:"清华大学",c:38},{n:"王雪",s:"复旦大学",c:35},{n:"陈宇",s:"浙江大学",c:31},{n:"刘涵",s:"南京大学",c:28},{n:"赵琪",s:"武汉大学",c:25},{n:"孙伟",s:"中山大学",c:22},{n:"周婷",s:"四川大学",c:19},{n:"吴博",s:"华中科技大学",c:16},{n:"郑悦",s:"西安交通大学",c:14}];
 // ==================== 云端同步配置 ====================
-const GITHUB_TOKEN = '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'; // 替换为你的 GitHub Personal Access Token
+const GITHUB_TOKEN = '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'; // 替换为你的 GitHub Personal Access Token
 const GIST_FILENAME = 'ranking-data.json';
 let isSyncing = false;
 let syncTimer = null;
@@ -520,10 +520,13 @@ if(document.readyState === 'loading'){
 } else {
   init();
 }
-</script>
 <div class="sync-bar" id="syncBar">
 <span class="sync-info" id="syncInfo"><span class="sync-dot off" id="syncDot"></span><span id="syncText">正在连接云端...</span></span>
 <button class="btn-refresh" id="refreshBtn" onclick="manualSync()" disabled>刷新</button>
 </div>
+<script>
+// ... 所有 JavaScript 代码 ...
+init();
+</script>
 </body>
 </html>
