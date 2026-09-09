@@ -514,19 +514,18 @@ toast("已更新至最新数据");
   draw();
 })();
 
-// 等待 DOM 完全加载后再初始化，确保同步状态元素已存在
-if(document.readyState === 'loading'){
-  document.addEventListener('DOMContentLoaded', function(){ init(); });
+// 等待 DOM 加载完成后再初始化，确保同步状态元素已存在
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', function() { init(); });
 } else {
   init();
 }
+</script>
+
 <div class="sync-bar" id="syncBar">
 <span class="sync-info" id="syncInfo"><span class="sync-dot off" id="syncDot"></span><span id="syncText">正在连接云端...</span></span>
 <button class="btn-refresh" id="refreshBtn" onclick="manualSync()" disabled>刷新</button>
 </div>
-<script>
-// ... 所有 JavaScript 代码 ...
-init();
-</script>
+
 </body>
 </html>
