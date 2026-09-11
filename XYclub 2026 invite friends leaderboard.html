@@ -150,8 +150,12 @@ textarea.fi{min-height:140px;resize:vertical;line-height:1.7;font-size:13px}
 <base target="_blank">
 </head>
 <body>
-<canvas id="starCanvas" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;"></canvas>
+<canvas id="starCanvas" ...></canvas>
 <div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div>
+<div class="sync-bar" id="syncBar">
+<span class="sync-info" id="syncInfo"><span class="sync-dot off" id="syncDot"></span><span id="syncText">正在连接云端...</span></span>
+<button class="btn-refresh" id="refreshBtn" onclick="manualSync()" disabled>刷新</button>
+</div>
 
 <header class="header">
 <div class="logo" onclick="openAdmin()" title="管理入口"><img src="data:image/jpeg;base64,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" alt="星云CLUB" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"></div>
@@ -521,11 +525,6 @@ if (document.readyState === 'loading') {
   init();
 }
 </script>
-
-<div class="sync-bar" id="syncBar">
-<span class="sync-info" id="syncInfo"><span class="sync-dot off" id="syncDot"></span><span id="syncText">正在连接云端...</span></span>
-<button class="btn-refresh" id="refreshBtn" onclick="manualSync()" disabled>刷新</button>
-</div>
 
 </body>
 </html>
