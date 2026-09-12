@@ -1,3 +1,5 @@
+XYclub 2026 invite friends leaderboard.html
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -323,26 +325,13 @@ function manualSync(){
 if(isSyncing)return;
 var currentGistId = localStorage.getItem('nebula_gist_id') || '';
 if(!currentGistId){
-  // ★ 关键修复：如果没有 Gist ID，尝试用当前数据创建 Gist
-  var sv = localStorage.getItem("nr"), data = sv ? JSON.parse(sv) : def;
-  if(data && data.length > 0){
-    toast("正在创建云端存储...");
-    pushToGist(data);
-  } else {
-    toast("请先录入数据以创建云端存储", true);
-  }
+  toast("尚未创建 Gist，请先录入数据以自动创建", true);
   return;
 }
 toast("正在同步...");
 pullFromGist(function(data){
-if(data!==null){
-  var d = data && data.length ? data : def;
-  localStorage.setItem("nr", JSON.stringify(d));
-  render(d);
-  toast("已同步最新数据 ✓");
-}else{
-  toast("同步失败，请检查配置",true);
-}
+if(data!==null){localStorage.setItem("nr",JSON.stringify(data&&data.length?data:def));render(data&&data.length?data:def);toast("已同步最新数据 ✓");}
+else{toast("同步失败，请检查配置",true);}
 });
 }
 function pushToGist(data){
@@ -352,52 +341,32 @@ if(!GITHUB_TOKEN||GITHUB_TOKEN.indexOf('xxxx')>-1){toast("请先配置 GitHub To
 isSyncing=true;setSyncStatus(false,"正在推送...");
 var payload={description:"星云活动社排行榜数据",public:false,files:{}};
 payload.files[GIST_FILENAME]={content:JSON.stringify(data,null,2)};
+// ★ 关键修复：每次从 localStorage 读取最新的 Gist ID
 var currentGistId = localStorage.getItem('nebula_gist_id') || '';
 var url=currentGistId?'https://api.github.com/gists/'+currentGistId:'https://api.github.com/gists';
 var method=currentGistId?'PATCH':'POST';
 fetch(url,{method:method,headers:{'Authorization':'token '+GITHUB_TOKEN,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify(payload)})
-.then(function(r){
-  // ★ 关键修复：检查 HTTP 状态码，如果不是 2xx，直接抛出错误
-  if(!r.ok){
-    return r.json().then(function(errRes){
-      throw new Error('HTTP '+r.status+': '+(errRes.message||'未知错误'));
-    });
-  }
-  return r.json();
-})
+.then(function(r){return r.json();})
 .then(function(res){
-  isSyncing=false;
-  if(res.id){
-    if(!currentGistId){
-      localStorage.setItem('nebula_gist_id',res.id);
-      alert('✅ 首次创建成功！\n\nGist ID 已自动保存到本地存储。\n\n请复制以下 ID 备用：\n'+res.id+'\n\n其他设备打开页面时将自动读取此 ID。');
-    }
-    setSyncStatus(true,"已同步 · "+new Date().toLocaleTimeString());
-    // ★ 新增：如果是更新操作，也给出提示
-    if(currentGistId){
-      toast("数据已推送至云端 ✓");
-    }
-  }else{
-    setSyncStatus(false,"同步失败: "+(res.message||'未知错误'));
-    console.error('Gist error:',res);
-    toast("同步失败: "+(res.message||'请检查Token权限'),true);
-  }
+isSyncing=false;
+if(res.id){
+if(!currentGistId){
+localStorage.setItem('nebula_gist_id',res.id);
+console.log('Gist ID 已自动保存: '+res.id);
+alert('首次创建成功！\n\nGist ID 已自动保存到本地存储。\n\n其他设备打开页面时将自动读取此 ID，无需手动配置。');
+}
+setSyncStatus(true,"已同步 · "+new Date().toLocaleTimeString());
+}else{
+setSyncStatus(false,"同步失败: "+(res.message||'未知错误'));
+console.error('Gist error:',res);
+toast("同步失败: "+(res.message||'请检查Token权限'),true);
+}
 })
 .catch(function(err){
-  isSyncing=false;
-  setSyncStatus(false,"同步失败");
-  var errMsg = err.message || '网络错误';
-  console.error('Fetch error:',err);
-  // ★ 关键修复：显示具体的 HTTP 错误信息
-  toast("❌ 同步失败: "+errMsg, true);
-  // 如果是 401 错误，给出明确提示
-  if(errMsg.indexOf('401') !== -1){
-    toast("🔑 Token 无效或已过期，请重新生成 GitHub Token", true);
-  } else if(errMsg.indexOf('403') !== -1){
-    toast("⛔ Token 权限不足，请确保勾选了 gist 权限", true);
-  } else if(errMsg.indexOf('404') !== -1){
-    toast("📁 Gist 已被删除，请重新录入数据创建", true);
-  }
+isSyncing=false;
+setSyncStatus(false,"网络错误");
+console.error('Fetch error:',err);
+toast("网络错误，请确认:\n1. 手机联网正常\n2. 文件通过HTTPS/服务器访问，非本地文件\n3. Token权限包含gist",true);
 });
 }catch(e){
 console.error('pushToGist error:',e);
@@ -448,32 +417,20 @@ initClock();updateClock();setInterval(updateClock,1000);
 // ★ 从 localStorage 读取 Gist ID
 var currentGistId = localStorage.getItem('nebula_gist_id') || '';
 
-// ★ 关键修复：先渲染本地数据，确保页面立即显示
-var sv=localStorage.getItem("nr"),data=sv?JSON.parse(sv):def;
-render(data);
-
-// ★ 关键修复：延迟执行同步相关操作，确保 DOM 已完全渲染
-setTimeout(function() {
-  if(!GITHUB_TOKEN||GITHUB_TOKEN.indexOf('xxxx')>-1){
-    setSyncStatus(false,"未配置 GitHub Token");
-    return;
-  }
-  if(!currentGistId){
-    setSyncStatus(false,"首次使用：录入数据后自动创建 Gist");
-    startAutoSync();
-    return;
-  }
-  setSyncStatus(false,"正在连接...");
-  pullFromGist(function(remoteData){
-    if(remoteData!==null){
-      var d=remoteData&&remoteData.length?remoteData:def;
-      localStorage.setItem("nr",JSON.stringify(d));
-      render(d);
-    }
-    startAutoSync();
-  });
-}, 300);
-
+if(!GITHUB_TOKEN||GITHUB_TOKEN.indexOf('xxxx')>-1){
+setSyncStatus(false,"未配置 GitHub Token");
+var sv=localStorage.getItem("nr"),data=sv?JSON.parse(sv):def;render(data);return;
+}
+if(!currentGistId){
+setSyncStatus(false,"首次使用：录入数据后自动创建 Gist");
+var sv=localStorage.getItem("nr"),data=sv?JSON.parse(sv):def;render(data);startAutoSync();return;
+}
+setSyncStatus(false,"正在连接...");
+pullFromGist(function(data){
+if(data!==null){var d=data&&data.length?data:def;localStorage.setItem("nr",JSON.stringify(d));render(d);}
+else{var sv=localStorage.getItem("nr"),d=sv?JSON.parse(sv):def;render(d);}
+startAutoSync();
+});
 document.addEventListener('visibilitychange',function(){
 var currentGistId = localStorage.getItem('nebula_gist_id') || '';
 if(!document.hidden&&currentGistId&&GITHUB_TOKEN&&GITHUB_TOKEN.indexOf('xxxx')===-1){
@@ -563,12 +520,11 @@ toast("已更新至最新数据");
   draw();
 })();
 
-// ★ 关键修复：始终等待 DOM 加载完成后再初始化
+// 等待 DOM 加载完成后再初始化，确保同步状态元素已存在
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', function() { init(); });
 } else {
-  // 即使 DOM 已加载，也使用 setTimeout 确保所有元素渲染完毕
-  setTimeout(function() { init(); }, 50);
+  init();
 }
 </script>
 
